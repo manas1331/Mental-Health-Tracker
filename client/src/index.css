@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 219, 234, 254; /* Light blue background for light mode */
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 17, 24, 39;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* Add a subtle gradient background in light mode */
+html:not(.dark) body {
+  background: linear-gradient(to bottom right, rgb(8, 82, 161), rgb(60, 204, 190));
+  color: white;
+  min-height: 100vh;
+}
+
+/* Improve text visibility in light mode */
+h1, h2, h3, h4, h5, h6 {
+  @apply text-white dark:text-white;
+}
+
+p {
+  @apply text-white dark:text-gray-300;
+}
+
+/* Add more specific color overrides for components */
+.text-label {
+  @apply text-white dark:text-gray-300;
+}
+
+/* Make sure dashboard stats are always visible */
+.bg-white dd {
+  @apply text-gray-900;
+}
+
+.dark .bg-gray-800 dd {
+  @apply text-white;
+}
+
+/* Fix text colors in form fields */
+input, select, textarea {
+  @apply text-gray-900 dark:text-white;
+}
+
+.bg-white dd {
+  --tw-text-opacity: 1;
+  color: rgb(242 244 249);
+}
+
+
+/* Custom button styles with active state for light and dark modes */
+.btn-primary {
+  @apply py-2 px-4 border border-transparent rounded-md text-white;
+  @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-blue-500;
+  @apply dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:active:bg-indigo-800 dark:focus:ring-indigo-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
