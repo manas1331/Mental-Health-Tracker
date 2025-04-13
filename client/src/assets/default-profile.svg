@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150px" height="150px" viewBox="0 0 150 150" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Default Profile</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#6366F1" cx="75" cy="75" r="75"></circle>
+        <path d="M75,85 C91.5685425,85 105,71.5685425 105,55 C105,38.4314575 91.5685425,25 75,25 C58.4314575,25 45,38.4314575 45,55 C45,71.5685425 58.4314575,85 75,85 Z" fill="#FFFFFF"></path>
+        <path d="M120,120 C120,95.81722 99.62334,76 75,76 C50.37666,76 30,95.81722 30,120 L75,120 L120,120 Z" fill="#FFFFFF"></path>
+    </g>
+</svg>
