@@ -44,6 +44,9 @@ function AuthProvider({ children }) {
         username: userData.username,
         name: userData.name || userData.username,
         email: userData.email,
+        gender: userData.gender || 'Prefer not to say',
+        dateOfBirth: userData.dateOfBirth || '',
+        preExistingConditions: userData.preExistingConditions || [],
         avatarUrl: 'https://via.placeholder.com/150',
       };
       
@@ -333,6 +336,9 @@ function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    gender: 'Prefer not to say',
+    dateOfBirth: '',
+    preExistingConditions: []
   });
   const [error, setError] = useState('');
 
@@ -340,6 +346,23 @@ function SignupPage() {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const toggleCondition = (condition) => {
+    setFormData(prev => {
+      const conditions = [...prev.preExistingConditions];
+      if (conditions.includes(condition)) {
+        return {
+          ...prev,
+          preExistingConditions: conditions.filter(c => c !== condition)
+        };
+      } else {
+        return {
+          ...prev,
+          preExistingConditions: [...conditions, condition]
+        };
+      }
     });
   };
 
@@ -439,9 +462,62 @@ function SignupPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
               />
+            </div>
+            <div>
+              <label htmlFor="dateOfBirth" className="sr-only">Date of Birth</label>
+              <input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                required
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Date of Birth"
+              />
+            </div>
+            <div>
+              <label htmlFor="gender" className="sr-only">Gender</label>
+              <select
+                id="gender"
+                name="gender"
+                required
+                value={formData.gender}
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Pre-existing conditions</h3>
+            <div className="space-y-2">
+              {['Anxiety', 'Depression', 'Insomnia', 'ADHD', 'PTSD'].map((condition) => (
+                <div key={condition} className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id={`condition-${condition}`}
+                      type="checkbox"
+                      checked={formData.preExistingConditions.includes(condition)}
+                      onChange={() => toggleCondition(condition)}
+                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 rounded"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor={`condition-${condition}`} className="font-medium text-gray-700 dark:text-gray-300">
+                      {condition}
+                    </label>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -831,494 +907,6 @@ function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// === Quiz Page Component ===
-function QuizPage() {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [result, setResult] = useState(null);
-  
-  const questions = [
-    {
-      id: 'q1',
-      text: 'Over the past two weeks, how often have you had little interest or pleasure in doing things?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q2',
-      text: 'Over the past two weeks, how often have you felt down, depressed, or hopeless?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q3',
-      text: 'Over the past two weeks, how often have you had trouble falling asleep, staying asleep, or sleeping too much?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q4',
-      text: 'Over the past two weeks, how often have you felt tired or had little energy?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q5',
-      text: 'Over the past two weeks, how often have you had poor appetite or been overeating?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q6',
-      text: 'Over the past two weeks, how often have you felt bad about yourself or that you are a failure or have let yourself or your family down?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q7',
-      text: 'Over the past two weeks, how often have you had trouble concentrating on things, such as reading the newspaper or watching television?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q8',
-      text: 'Over the past two weeks, how often have you been feeling anxious, nervous, or on edge?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-    {
-      id: 'q9',
-      text: 'Over the past two weeks, how often have you been unable to stop or control worrying?',
-      options: [
-        { value: 0, label: 'Not at all' },
-        { value: 1, label: 'Several days' },
-        { value: 2, label: 'More than half the days' },
-        { value: 3, label: 'Nearly every day' },
-      ],
-    },
-  ];
-  
-  const handleAnswer = (questionId, value) => {
-    setAnswers({
-      ...answers,
-      [questionId]: value,
-    });
-  };
-  
-  const handleNext = () => {
-    if (step < questions.length - 1) {
-      setStep(step + 1);
-    } else {
-      calculateResult();
-    }
-  };
-  
-  const handlePrev = () => {
-    if (step > 0) {
-      setStep(step - 1);
-    }
-  };
-  
-  const calculateResult = () => {
-    // Simple scoring algorithm
-    const totalScore = Object.values(answers).reduce((sum, value) => sum + value, 0);
-    const maxScore = questions.length * 3;
-    const percentage = Math.round((totalScore / maxScore) * 100);
-    
-    let depressionLevel;
-    if (percentage < 25) {
-      depressionLevel = 'Minimal or no depression';
-    } else if (percentage < 50) {
-      depressionLevel = 'Mild depression';
-    } else if (percentage < 75) {
-      depressionLevel = 'Moderate depression';
-    } else {
-      depressionLevel = 'Severe depression';
-    }
-    
-    setResult({
-      score: totalScore,
-      maxScore,
-      percentage,
-      level: depressionLevel,
-      recommendations: [
-        'Consider regular physical exercise',
-        'Maintain a consistent sleep schedule',
-        'Practice mindfulness meditation',
-        'Connect with friends and family',
-      ],
-    });
-  };
-  
-  const restartQuiz = () => {
-    setStep(0);
-    setAnswers({});
-    setResult(null);
-  };
-  
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Mental Health Assessment</h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">This quiz helps assess symptoms of depression and anxiety</p>
-      
-      <div className="mt-6 bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-        {!result ? (
-          <>
-            <div className="mb-6">
-              <div className="relative pt-1">
-                <div className="flex mb-2 items-center justify-between">
-                  <div>
-                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 dark:text-indigo-400 bg-indigo-200 dark:bg-indigo-900">
-                      Progress
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-semibold inline-block text-indigo-600 dark:text-indigo-400">
-                      {Math.round(((step + 1) / questions.length) * 100)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200 dark:bg-indigo-900">
-                  <div
-                    style={{ width: `${((step + 1) / questions.length) * 100}%` }}
-                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
-                  ></div>
-                </div>
-              </div>
-            </div>
-          
-            <div className="mb-8">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">{questions[step].text}</h2>
-              
-              <div className="space-y-3">
-                {questions[step].options.map((option) => (
-                  <div key={option.value} className="flex items-center">
-                    <input
-                      id={`option-${option.value}`}
-                      name={`question-${questions[step].id}`}
-                      type="radio"
-                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                      checked={answers[questions[step].id] === option.value}
-                      onChange={() => handleAnswer(questions[step].id, option.value)}
-                    />
-                    <label htmlFor={`option-${option.value}`} className="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {option.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex justify-between">
-              <button
-                onClick={handlePrev}
-                disabled={step === 0}
-                className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md ${
-                  step === 0
-                    ? 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 cursor-not-allowed'
-                    : 'text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-              >
-                Previous
-              </button>
-              
-              <button
-                onClick={handleNext}
-                disabled={answers[questions[step].id] === undefined}
-                className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md ${
-                  answers[questions[step].id] === undefined
-                    ? 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 cursor-not-allowed'
-                    : 'text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                }`}
-              >
-                {step === questions.length - 1 ? 'Submit' : 'Next'}
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Your Assessment Results</h2>
-            
-            <div className="mb-8">
-              <div className="inline-flex items-center justify-center p-4 bg-indigo-100 dark:bg-indigo-900 rounded-full">
-                <span className="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{result.score}/{result.maxScore}</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Total Score</p>
-            </div>
-            
-            <div className="mb-8">
-              <div className="inline-block bg-white dark:bg-gray-700 rounded-lg p-4 shadow-md">
-                <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">{result.level}</h3>
-                <p className="text-gray-600 dark:text-gray-300">Based on your responses, you show signs of {result.level.toLowerCase()}.</p>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">
-                  Please note that this is not a clinical diagnosis. If you're concerned about your mental health, 
-                  please consult with a qualified healthcare professional.
-                </p>
-              </div>
-            </div>
-            
-            <div className="mb-8">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recommendations</h3>
-              <ul className="space-y-2 text-left max-w-md mx-auto">
-                {result.recommendations.map((rec, index) => (
-                  <li key={index} className="flex items-start">
-                    <svg className="h-6 w-6 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-gray-700 dark:text-gray-300">{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <button
-              onClick={restartQuiz}
-              className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Take Quiz Again
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// === Chatbot Page Component ===
-function ChatbotPage() {
-  const { user } = useAuth();
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = React.useRef(null);
-  
-  useEffect(() => {
-    // Add welcome message when component mounts
-    const welcomeMessage = {
-      id: '1',
-      content: "Hi there! I'm your mental health chatbot. How are you feeling today?",
-      isUser: false,
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
-  }, []);
-  
-  useEffect(() => {
-    // Scroll to bottom of messages
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    
-    if (!inputMessage.trim()) return;
-    
-    // Add user message
-    const userMessage = {
-      id: Math.random().toString(36).substring(2, 9),
-      content: inputMessage,
-      isUser: true,
-      timestamp: new Date(),
-    };
-    
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setInputMessage('');
-    
-    // Simulate bot typing
-    setIsTyping(true);
-    
-    // Analyze message for depression indicators (mock)
-    const mockAnalysis = analyzeSentiment(inputMessage);
-    
-    // Simulate bot response after delay
-    setTimeout(() => {
-      const botMessage = {
-        id: Math.random().toString(36).substring(2, 9),
-        content: mockAnalysis.response,
-        isUser: false,
-        timestamp: new Date(),
-        depressionScore: mockAnalysis.depressionScore,
-      };
-      
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
-      setIsTyping(false);
-    }, 1500);
-  };
-  
-  // Simple mock sentiment analysis
-  function analyzeSentiment(message) {
-    const lowerMessage = message.toLowerCase();
-    
-    // Check for negative emotional words
-    const negativeWords = ['sad', 'depressed', 'unhappy', 'miserable', 'anxious', 'worried', 'hopeless', 'tired', 'exhausted', 'lonely'];
-    const positiveWords = ['happy', 'good', 'great', 'excellent', 'wonderful', 'excited', 'peaceful', 'calm', 'relaxed', 'joy'];
-    
-    let negativeCount = 0;
-    let positiveCount = 0;
-    
-    negativeWords.forEach(word => {
-      if (lowerMessage.includes(word)) negativeCount++;
-    });
-    
-    positiveWords.forEach(word => {
-      if (lowerMessage.includes(word)) positiveCount++;
-    });
-    
-    let depressionScore = 0;
-    let response = '';
-    
-    if (negativeCount > positiveCount) {
-      depressionScore = Math.min(100, negativeCount * 25);
-      
-      if (depressionScore > 75) {
-        response = "I'm really sorry to hear you're feeling this way. It sounds like you're going through a difficult time. Have you considered talking to a mental health professional about these feelings? They can provide specialized support.";
-      } else if (depressionScore > 50) {
-        response = "I notice you're expressing some difficult emotions. It's completely normal to have ups and downs. Would it help to talk about what might be causing these feelings?";
-      } else {
-        response = "Thank you for sharing how you're feeling. Sometimes just expressing our emotions can help. Is there anything specific that's troubling you today?";
-      }
-    } else if (positiveCount > negativeCount) {
-      depressionScore = Math.max(0, 50 - (positiveCount * 15));
-      response = "It's great to hear you're feeling positive! Maintaining good mental health is just as important as managing difficulties. What activities have been bringing you joy lately?";
-    } else {
-      depressionScore = 50;
-      response = "I'm here to listen. Could you tell me more about how you're feeling and what's been on your mind lately?";
-    }
-    
-    return { response, depressionScore };
-  }
-  
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Mental Health Chatbot</h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Talk about how you're feeling and get supportive responses</p>
-      
-      <div className="mt-6 bg-white dark:bg-gray-800 shadow-sm rounded-lg flex flex-col h-[600px]">
-        {/* Chat Messages */}
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div 
-                key={message.id} 
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`max-w-3/4 p-3 rounded-lg ${
-                    message.isUser 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  }`}
-                >
-                  <p>{message.content}</p>
-                  {message.depressionScore !== undefined && (
-                    <div className="mt-1 text-xs opacity-75">
-                      <div className="h-1 w-full bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-red-500" 
-                          style={{ width: `${message.depressionScore}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs">Depression Indicator: {message.depressionScore}%</span>
-                    </div>
-                  )}
-                  <span className="block text-xs mt-1 opacity-75">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-3/4 p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-100"></div>
-                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-200"></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-        
-        {/* Chat Input */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-          <form onSubmit={handleSendMessage} className="flex">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Type your message..."
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </form>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Note: This is a demo chatbot. In a real application, a more sophisticated AI model would be used for mental health analysis.
-          </p>
-        </div>
-      </div>
-      
-      <div className="mt-6">
-        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-          <h2 className="font-medium text-gray-900 dark:text-white">About This Chatbot</h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            This chatbot is designed to provide a safe space for you to express your feelings and thoughts. 
-            It uses natural language processing to analyze your messages for potential signs of depression 
-            and provides supportive responses.
-          </p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Remember that while technology can be helpful, it's not a replacement for professional mental health support. 
-            If you're experiencing severe distress, please reach out to a qualified healthcare provider.
-          </p>
         </div>
       </div>
     </div>

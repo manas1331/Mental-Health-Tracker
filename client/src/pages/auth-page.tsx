@@ -27,8 +27,12 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  gender: z.string(),
+  dateOfBirth: z.string().min(1, { message: "Date of birth is required" }),
+  preExistingConditions: z.array(z.string()).optional().default([]),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -71,8 +75,12 @@ export default function AuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
+      gender: "",
+      dateOfBirth: "",
+      preExistingConditions: [],
     },
   });
 
@@ -191,6 +199,19 @@ export default function AuthPage() {
                         />
                         <FormField
                           control={registerForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="Enter your email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
                           name="password"
                           render={({ field }) => (
                             <FormItem>
@@ -215,6 +236,71 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
+                        <FormField
+                          control={registerForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <FormControl>
+                                <select 
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  {...field}
+                                >
+                                  <option value="">Select gender</option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                  <option value="Non-binary">Non-binary</option>
+                                  <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="dateOfBirth"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date of Birth</FormLabel>
+                              <FormControl>
+                                <Input type="date" placeholder="Enter your date of birth" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div>
+                          <FormLabel className="block mb-2">Pre-existing Conditions</FormLabel>
+                          <div className="space-y-2">
+                            {['Anxiety', 'Depression', 'Insomnia', 'ADHD', 'PTSD'].map((condition) => (
+                              <div key={condition} className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  id={`condition-${condition}`}
+                                  name="preExistingConditions"
+                                  value={condition}
+                                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                  onChange={(e) => {
+                                    const currentConditions = registerForm.getValues("preExistingConditions") || [];
+                                    if (e.target.checked) {
+                                      registerForm.setValue("preExistingConditions", [...currentConditions, condition]);
+                                    } else {
+                                      registerForm.setValue(
+                                        "preExistingConditions",
+                                        currentConditions.filter((c) => c !== condition)
+                                      );
+                                    }
+                                  }}
+                                />
+                                <label htmlFor={`condition-${condition}`} className="ml-2 text-sm text-gray-900 dark:text-gray-100">
+                                  {condition}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                         <Button 
                           type="submit" 
                           className="w-full bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-600"

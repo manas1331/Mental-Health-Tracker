@@ -366,13 +366,33 @@ function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    gender: 'Prefer not to say',
+    dateOfBirth: '',
+    preExistingConditions: []
   });
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+
+  const toggleCondition = (condition: string) => {
+    setFormData(prev => {
+      const conditions = [...prev.preExistingConditions];
+      if (conditions.includes(condition)) {
+        return {
+          ...prev,
+          preExistingConditions: conditions.filter(c => c !== condition)
+        };
+      } else {
+        return {
+          ...prev,
+          preExistingConditions: [...conditions, condition]
+        };
+      }
     });
   };
 
@@ -380,7 +400,7 @@ function SignupPage() {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password || !formData.dateOfBirth) {
       setError('All fields are required.');
       return;
     }
@@ -417,6 +437,7 @@ function SignupPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
               <input
                 id="username"
                 name="username"
@@ -430,6 +451,7 @@ function SignupPage() {
               />
             </div>
             <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
               <input
                 id="email"
                 name="email"
@@ -443,6 +465,7 @@ function SignupPage() {
               />
             </div>
             <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
               <input
                 id="password"
                 name="password"
@@ -456,6 +479,7 @@ function SignupPage() {
               />
             </div>
             <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -467,6 +491,54 @@ function SignupPage() {
                 className="appearance-none relative block w-full px-3 py-2 border-0 border-b border-gray-300 dark:border-gray-600 bg-white text-black dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm"
                 placeholder="Confirm Password"
               />
+            </div>
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+              <input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                required
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border-0 border-b border-gray-300 dark:border-gray-600 bg-white text-black dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
+              <select
+                id="gender"
+                name="gender"
+                required
+                value={formData.gender}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border-0 border-b border-gray-300 dark:border-gray-600 bg-white text-black dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+
+            <div className="mt-4">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pre-existing Conditions</span>
+              <div className="space-y-2">
+                {['Anxiety', 'Depression', 'Insomnia', 'ADHD', 'PTSD'].map((condition) => (
+                  <div key={condition} className="flex items-center">
+                    <input
+                      id={`condition-${condition}`}
+                      type="checkbox"
+                      checked={formData.preExistingConditions.includes(condition)}
+                      onChange={() => toggleCondition(condition)}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`condition-${condition}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      {condition}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
