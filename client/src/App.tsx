@@ -11,55 +11,46 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Simulate initial auth check
   useEffect(() => {
-    // Check if user exists in localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    fetch('/api/user', { credentials: 'include' })
+      .then(res => { if (res.ok) return res.json(); throw new Error(); })
+      .then(data => setUser(data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
-  const login = (credentials: { username: string; password: string }) => {
-    // For demo, we'll just check if username and password are provided
-    if (credentials.username && credentials.password) {
-      const userData = {
-        id: 1,
-        username: credentials.username,
-        name: 'Test User',
-        email: 'test@example.com',
-        avatarUrl: defaultProfileImg,
-      };
-      
-      // Save user to localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+  const login = async (credentials: { username: string; password: string }) => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data);
       return true;
     }
     return false;
   };
 
-  const signup = (userData: { username: string; email: string; password: string; name?: string }) => {
-    if (userData.username && userData.password && userData.email) {
-      const newUser = {
-        id: 1,
-        username: userData.username,
-        name: userData.name || userData.username,
-        email: userData.email,
-        avatarUrl: defaultProfileImg,
-      };
-      
-      // Save user to localStorage
-      localStorage.setItem('user', JSON.stringify(newUser));
-      setUser(newUser);
+  const signup = async (userData: { username: string; email: string; password: string; name?: string; gender: string; dateOfBirth: string; preExistingConditions: string[] }) => {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data);
       return true;
     }
     return false;
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
+  const logout = async () => {
+    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
   };
 
@@ -207,7 +198,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               >
                 {isDarkMode ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -272,10 +263,10 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username && password) {
-      const success = login({ username, password });
+      const success = await login({ username, password });
       if (success) {
         navigate('/');
       } else {
@@ -361,7 +352,7 @@ function LoginPage() {
 function SignupPage() {
   const { signup } = useAuth();
   const [, navigate] = useLocation();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ username: string; email: string; password: string; confirmPassword: string; gender: string; dateOfBirth: string; preExistingConditions: string[] }>({
     username: '',
     email: '',
     password: '',
@@ -396,7 +387,7 @@ function SignupPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
@@ -411,7 +402,7 @@ function SignupPage() {
     }
     
     // Call signup
-    const success = signup(formData);
+    const success = await signup(formData);
     if (success) {
       navigate('/');
     } else {
@@ -509,7 +500,6 @@ function SignupPage() {
               <select
                 id="gender"
                 name="gender"
-                required
                 value={formData.gender}
                 onChange={handleChange}
                 className="appearance-none relative block w-full px-3 py-2 border-0 border-b border-gray-300 dark:border-gray-600 bg-white text-black dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-0 focus:border-indigo-500 sm:text-sm"
@@ -531,7 +521,7 @@ function SignupPage() {
                       type="checkbox"
                       checked={formData.preExistingConditions.includes(condition)}
                       onChange={() => toggleCondition(condition)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded"
                     />
                     <label htmlFor={`condition-${condition}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                       {condition}
@@ -1104,7 +1094,7 @@ function QuizPage() {
   
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-green-900 dark:text-green-400">Mental Health Assessment</h1>
+      <h1 className="text-2xl font-semibold text-gray-900 dark:text-green-400">Mental Health Assessment</h1>
       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">This quiz helps assess symptoms of depression and anxiety</p>
       
       <div className="mt-6 bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
@@ -1411,7 +1401,7 @@ function ChatbotPage() {
               className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
             </button>
           </form>
