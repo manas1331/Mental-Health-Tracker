@@ -54,8 +54,27 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  // update user profile
+  const updateProfile = async (updates: Partial<{ email: string; gender: string; dateOfBirth: string; preExistingConditions: string[] }>) => {
+    const res = await fetch('/api/user', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data);
+      return true;
+    }
+    return false;
+  };
+
+  // allow updating user in context
+  const updateUser = (u: any) => setUser(u);
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
@@ -677,260 +696,75 @@ function DashboardPage() {
 
 // === Profile Page Component ===
 function ProfilePage() {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    age: '25',
-    gender: 'Prefer not to say',
-    conditions: [] as string[]
-  });
+  const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  
+  const [formData, setFormData] = useState<{ email: string; gender: string; dateOfBirth: string; preExistingConditions: string[] }>({
+    email: user?.email || '',
+    gender: user?.gender || 'Prefer not to say',
+    dateOfBirth: user?.dateOfBirth?.slice(0,10) || '',
+    preExistingConditions: user?.preExistingConditions || [],
+  });
+  useEffect(() => {
+    setFormData({
+      email: user?.email || '',
+      gender: user?.gender || 'Prefer not to say',
+      dateOfBirth: user?.dateOfBirth?.slice(0,10) || '',
+      preExistingConditions: user?.preExistingConditions || [],
+    });
+  }, [user]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  const toggleCondition = (condition: string) => {
+  const toggleCondition = (cond: string) => {
     setFormData(prev => {
-      const conditions = [...prev.conditions]; 
-      if (conditions.includes(condition)) {
-        return {
-          ...prev,
-          conditions: conditions.filter(c => c !== condition)
-        };
-      } else {
-        return {
-          ...prev,
-          conditions: [...conditions, condition]
-        };
-      }
+      const list = [...prev.preExistingConditions];
+      return { ...prev, preExistingConditions: list.includes(cond) ? list.filter(c => c !== cond) : [...list, cond] };
     });
   };
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save profile data (this would update the backend in a real app)
-    setIsEditing(false);
+    if (await updateProfile(formData)) setIsEditing(false);
   };
-  
+  const calculateAge = (dob: string): number => {
+    const today = new Date(); const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
   return (
-    <div>
+    <div className="mt-6">
       <h1 className="text-2xl font-semibold text-white dark:text-green-400">Your Profile</h1>
       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your personal information and preferences</p>
-      
-      <div className="mt-6">
-        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-white dark:text-white">Personal Information</h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Your personal details and medical history</p>
-            </div>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              {isEditing ? 'Cancel' : 'Edit'}
-            </button>
-          </div>
-          
-          {isEditing ? (
-            <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-6">
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Full name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      id="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="mt-1 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Email address
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="mt-1 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Age
-                    </label>
-                    <input
-                      type="text"
-                      name="age"
-                      id="age"
-                      value={formData.age}
-                      onChange={handleChange}
-                      className="mt-1 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Gender
-                    </label>
-                    <select
-                      id="gender"
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      className="mt-1 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Non-binary</option>
-                      <option>Prefer not to say</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="mt-6">
-                  <fieldset>
-                    <legend className="text-base font-medium text-gray-900 dark:text-white">Pre-existing conditions</legend>
-                    <div className="mt-4 space-y-4">
-                      {['Anxiety', 'Depression', 'Insomnia', 'ADHD', 'PTSD'].map((condition) => (
-                        <div key={condition} className="flex items-start">
-                          <div className="flex items-center h-5">
-                            <input
-                              id={condition}
-                              name="conditions"
-                              type="checkbox"
-                              checked={(formData.conditions as string[]).includes(condition)}
-                              onChange={() => toggleCondition(condition)}
-                              className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 rounded"
-                            />
-                          </div>
-                          <div className="ml-3 text-sm">
-                            <label htmlFor={condition} className="font-medium text-gray-700 dark:text-gray-300">
-                              {condition}
-                            </label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </fieldset>
-                </div>
-                
-                <div className="mt-6">
-                  <button
-                    type="submit"
-                    className="btn-primary inline-flex justify-center text-sm font-medium"
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <div className="border-t border-gray-200 dark:border-gray-700">
-              <dl>
-                <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Full name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.name}</dd> 
-                </div>
-                <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.email}</dd>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Age</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">25</dd>
-                </div>
-                <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gender</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">Prefer not to say</dd>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Pre-existing conditions</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 mr-2 mb-2">
-                      Anxiety
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 mr-2 mb-2">
-                      Depression
-                    </span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          )}
+      <button onClick={() => setIsEditing(!isEditing)} className="inline-flex items-center px-3 py-2 mt-4 border border-transparent text-sm font-medium rounded-md text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        {isEditing ? 'Cancel' : 'Edit'}
+      </button>
+      {isEditing ? (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+            <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 sm:text-sm" /></div>
+          <div><label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
+            <input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 sm:text-sm" /></div>
+          <div><label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
+            <select id="gender" name="gender" value={formData.gender} onChange={handleChange} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 sm:text-sm">
+              <option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
+            </select></div>
+          <fieldset className="mt-4"><legend className="text-base font-medium text-gray-900 dark:text-gray-200">Pre-existing conditions</legend>
+            <div className="mt-2 space-y-2">{['Anxiety','Depression','Insomnia','ADHD','PTSD'].map(cond => (<label key={cond} className="flex items-center"><input type="checkbox" checked={formData.preExistingConditions.includes(cond)} onChange={() => toggleCondition(cond)} className="form-checkbox h-4 w-4 text-indigo-600" /><span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{cond}</span></label>))}</div></fieldset>
+          <button type="submit" className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500">Save</button>
+        </form>
+      ) : (
+        <div className="mt-4 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+          <div className="border-t border-gray-200 dark:border-gray-700"><dl>
+            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"><dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Username</dt><dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.username}</dd></div>
+            <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"><dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt><dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.email}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"><dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Age</dt><dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.dateOfBirth ? calculateAge(user.dateOfBirth) : ''}</dd></div>
+            <div className="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"><dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gender</dt><dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{user?.gender || 'Prefer not to say'}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"><dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Pre-existing conditions</dt><dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">{(user?.preExistingConditions||[]).map(cond=>(<span key={cond} className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 mr-2 mb-2">{cond}</span>))}</dd></div>
+          </dl></div>
         </div>
-        
-        <div className="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Device Connections</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Connected devices and data sources</p>
-          </div>
-          
-          <div className="border-t border-gray-200 dark:border-gray-700">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Apple Watch</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Connected - Last synced 2 hours ago</p>
-                  </div>
-                </div>
-                <button className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">Disconnect</button>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Fitbit</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Not connected</p>
-                  </div>
-                </div>
-                <button className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">Connect</button>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Google Fit</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Not connected</p>
-                  </div>
-                </div>
-                <button className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">Connect</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1393,7 +1227,7 @@ function ChatbotPage() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Type your message..."
             />
             <button

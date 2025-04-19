@@ -659,7 +659,7 @@ function ProfilePage() {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    age: '25',
+    age: '21',
     gender: 'Prefer not to say',
     conditions: []
   });
@@ -841,7 +841,7 @@ function ProfilePage() {
                   <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Pre-existing conditions</dt>
                   <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 mr-2 mb-2">
-                      Anxiety
+                      Anxie
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 mr-2 mb-2">
                       Depression

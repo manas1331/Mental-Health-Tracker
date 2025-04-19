@@ -132,4 +132,17 @@ export async function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+
+  // Update user profile
+  app.put("/api/user", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) return res.sendStatus(401);
+      const userId = (req.user as IUser)._id;
+      const updates = req.body;
+      const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+      res.json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
 }
