@@ -759,6 +759,57 @@ function ProfilePage() {
   );
 }
 
+// === Forecast Analysis Page Component ===
+function ForecastAnalysisPage() {
+  const { user } = useAuth();
+  const [forecastData, setForecastData] = useState<string>('');
+  const [analysis, setAnalysis] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const data = JSON.parse(forecastData);
+      const res = await fetch('/api/forecast-analysis', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (res.ok) setAnalysis(json.analysis);
+      else setAnalysis(`Error: ${json.error}`);
+    } catch (err: any) {
+      setAnalysis(`Invalid JSON: ${err.message}`);
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Forecast Analysis</h2>
+      <textarea
+        className="w-full h-64 p-2 border rounded dark:bg-gray-700 dark:text-white"
+        placeholder="Paste forecast JSON here"
+        value={forecastData}
+        onChange={(e) => setForecastData(e.target.value)}
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={isLoading}
+        className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
+      >
+        {isLoading ? 'Analyzing...' : 'Analyze Forecast'}
+      </button>
+      {analysis && (
+        <div className="mt-4 p-4 border rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white whitespace-pre-wrap">
+          {analysis}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // === Chatbot Page Component ===
 function ChatbotPage() {
   const { user } = useAuth();
@@ -1027,6 +1078,11 @@ function App() {
         <ProtectedRoute path="/chatbot">
           <Layout>
             <ChatbotPage />
+          </Layout>
+        </ProtectedRoute>
+        <ProtectedRoute path="/forecast-analysis">
+          <Layout>
+            <ForecastAnalysisPage />
           </Layout>
         </ProtectedRoute>
         <Route>

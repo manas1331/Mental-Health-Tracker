@@ -1,5 +1,6 @@
 import { Express, Request, Response } from "express";
 import { storage } from "./storage";
+import { GoogleGenAI } from '@google/genai';
 
 export function setupChatbot(app: Express) {
   // Mental health chatbot implementation
@@ -109,6 +110,45 @@ export function setupChatbot(app: Express) {
     } catch (error) {
       console.error("Error analyzing mental health:", error);
       res.status(500).json({ error: "Failed to analyze mental health data" });
+    }
+  });
+  
+  // Add endpoint to analyze forecast data using Gemini API
+  app.post("/api/forecast-analysis", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const forecastData = req.body;
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const prompt = `You are a mental health assistant. Given the following 30-day forecast data of stress, anxiety, and depression (JSON):\n${JSON.stringify(forecastData)}\nPlease analyze the user's current mental state and determine if they need immediate attention. If immediate attention is needed, advise the user accordingly and offer them the opportunity to chat with the website's chatbot for emotional assistance. Provide your analysis in a clear, concise manner.`;
+      const result = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+        config: { temperature: 0.7 },
+      });
+      // Extract a plain string from the Gemini response (handle parts arrays)
+      const candidate = result.candidates?.[0];
+      let analysis: string = "";
+      if (candidate) {
+        const content = candidate.content as any;
+        if (typeof content === 'string') {
+          analysis = content;
+        } else if (content?.parts && Array.isArray(content.parts)) {
+          // parts may be objects with a 'text' field
+          analysis = content.parts
+            .map((p: any) => typeof p === 'string' ? p : p.text ?? '')
+            .join('');
+        } else {
+          analysis = JSON.stringify(content);
+        }
+      } else if (typeof (result as any).text === 'string') {
+        analysis = (result as any).text;
+      }
+      res.json({ analysis });
+    } catch (error) {
+      console.error("Error analyzing forecast data:", error);
+      res.status(500).json({ error: "Failed to analyze forecast data" });
     }
   });
 }
