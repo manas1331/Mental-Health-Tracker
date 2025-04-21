@@ -3,6 +3,8 @@ import { Route, Switch, useLocation, useRoute } from 'wouter';
 import calmWavesBg from './assets/calm-waves.svg';
 import mindfulPatternBg from './assets/mindful-pattern.svg';
 import defaultProfileImg from './assets/default-profile.svg';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // === Auth Context ===
 const AuthContext = createContext<any>(null);
@@ -802,8 +804,8 @@ function ForecastAnalysisPage() {
         {isLoading ? 'Analyzing...' : 'Analyze Forecast'}
       </button>
       {analysis && (
-        <div className="mt-4 p-4 border rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white whitespace-pre-wrap">
-          {analysis}
+        <div className="mt-4 p-4 border rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white prose dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} children={analysis} />
         </div>
       )}
     </div>
