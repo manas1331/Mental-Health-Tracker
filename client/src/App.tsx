@@ -153,10 +153,10 @@ function Layout({ children }: { children: React.ReactNode }) {
                 </a>
               </li>
               <li>
-                <a 
-                  href="#" 
-                  onClick={(e) => { e.preventDefault(); navigate('/chatbot'); }}
-                  className={`flex items-center p-3 text-white dark:text-white-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${location === '/chatbot' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); window.open('https://9d6e4d1d7e3e17d0eb.gradio.live', '_blank'); }}
+                  className="flex items-center p-3 text-white dark:text-white-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
