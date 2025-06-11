@@ -1,5 +1,21 @@
 # Mental-Health-Tracker
-This is a mental health tracking system which uses conversations with the users,user's watch data and also the answers from the quiz to tell the level of mental stress and give remedies.(***This is not a replacement of an actual physician***)
+Mental health is an increasingly critical component of overall well-being, yet many individuals struggle to identify and manage their stress levels effectively in daily life. Our Mental Health Tracking System aims to bridge this gap by offering an intelligent, user-friendly platform that monitors, analyzes, and supports users’ mental wellness through real-time interaction and data-driven insights.
+
+This system combines cutting-edge machine learning, wearable technology integration, and conversational AI to assess a user's stress levels and recommend personalized remedies. At its core, the application engages users in meaningful dialogue through a smart chatbot, while simultaneously analyzing biometric data from smartwatches (e.g., heart rate variability, sleep patterns, and activity levels) to evaluate mental stress.
+
+The platform is built with a modern web architecture:
+
+- Frontend: Developed using Next.js, ensuring a responsive, performant, and interactive user interface.
+
+- Backend: Powered by Express.js, which efficiently handles API routing, user data processing, and watch data integration.
+
+- Chatbot Feature: We use LLAMA, a powerful language model, to drive empathetic and context-aware conversations with users.
+
+- Interface for ML Chatbot: Implemented using Gradio, an open-source Python library that enables seamless interaction with the chatbot model directly in the browser.
+
+By combining conversational AI with physiological data analysis, our system offers users a safe and supportive space to track their mental health. It not only identifies early signs of stress but also suggests appropriate, science-backed remedies such as breathing exercises, mindfulness routines, and lifestyle changes—tailored to the user's current state.
+
+#### (***NOTE:This is not a replacement of an actual physician***)
 
 ## How to run
 1. First Clone the github repository to your device.
