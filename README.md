@@ -26,4 +26,6 @@ This is a mental health tracking system which uses conversations with the users,
 ### Profile Page
 ![image](https://github.com/user-attachments/assets/e564c6aa-a18c-473a-9db4-7dee168f76fb)
 
+## License
+This project is licensed under the [MIT License](LICENSE).
  
